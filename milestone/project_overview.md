@@ -21,6 +21,24 @@ The data recorded by each sensor will also be displayed on a web dashboard viewe
 ## System overview
 
 ## Sensor integration
+Sensors that will be used:
+- Thingy:52
+  - HTS221 Capacitive Digital Humidity Sensor
+  - LPS22 MEMS Nano Pressure Sensor
+  - Adafruit CCS811 Air Quality Sensor
+- SEN54
+
+Types of data required:
+- Temperature
+- Humidity
+- Air pressure
+- VOC index
+- Particulate matter
+
+How the sensors will be integrated:
+- Each SEN54 will interface with its accompanying Thingy:52 via I2C. The SDA and SCL lines are both open drain I/Os. They will both be connected to pull-up resistors. **NEED MORE INFO HERE**
+- The Thingy:52 devices will connected amongst themselves via Bluetooth - specifically, the mesh network. **NEED MORE INFO HERE ABOUT HOW THE COMMUNICATION ACTUALLY HAPPENS. IS IT VIA GATT?**
+
 
 ## Wireless network communication
 
