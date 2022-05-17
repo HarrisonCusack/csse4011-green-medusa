@@ -10,6 +10,13 @@ Users will be able to request a particular reading from a specified device in th
 The data recorded by each sensor will also be displayed on a web dashboard viewer in real time.
 
 ## Key performance indicators
+1. **Accuracy:** The air quality and weather data readings from the Thingy:52 and SEN54 sensors are accurate - i.e. they closely match the 'real' values (15% leniency), and do not fluctuate extensively around these (15% leniency).
+2. **Coverage:** The region in which readings can be attained is large (i.e. more space than a single classroom). This ensures that the Bluetooth Mesh network is functioning as expected.
+3. **Data variety:** A variety of weather data related information can be requested from each sensor - i.e. more than four different types.
+4. **Latency:** Upon a data request, the user does not have to wait long for the reading to be relayed back to them - i.e. less than 3 seconds. Furthermore, the web dashboard updates in close to realtime (i.e. within 5 seconds).
+5. **Reliability:** Readings can be reliably obtained anytime - i.e. throughout the entire testing period, there are no software crashes.
+6. **Presentation:** The commands that users type to obtain data readings are simple and intuitive. The data is relayed back to the user in a simple, interpretable way. The web dashboard is visually concise and well presented.
+
 
 ## System overview
 
