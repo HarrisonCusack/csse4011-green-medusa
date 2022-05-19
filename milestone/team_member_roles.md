@@ -5,7 +5,7 @@ Harrison will be primarily responsible for establishing the Bluetooth Mesh conne
 
 
 ## Thanh Do (45062148)
-
+Dashboard
 
 
 ## Team Photo
