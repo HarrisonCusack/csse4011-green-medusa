@@ -50,8 +50,13 @@ How the sensors will be integrated:
 - The devices themselves will interact with each other by sending messages via configuration servers established in the mesh network. These configuration servers will be specific to a particular application key and network key (each device will be bound to the same application key).
 
 ## Wireless network communication
-- nRF52840 Dongle connects to Thingy:52 via Bluetooth Mesh
-- The Thingy:52 devices will connected amongst themselves via Bluetooth - specifically, the mesh network. **NEED MORE INFO HERE ABOUT HOW THE COMMUNICATION ACTUALLY HAPPENS. IS IT VIA GATT?**
+- The Thingy:52 devices will connected amongst themselves via Bluetooth - specifically, the mesh network.
+- nRF52840 Dongle will join the mesh network when in range and flood the bluetooth message through the mesh network until the specified mote device receives the message. 
+This is done by sending the message to all nearby neighbours. When a mote receives a message, it checks if the message belongs to it before decided next action. If the message was for the mote, take a measurement depending on HCI and send back to original address through the mesh. If the message was not for the mote, send to nearest neighbour. Refer to diagram in system overview for a detailed software flowchart.
+
+The HCI format involves an array of bytes sent through bluetooth.
+This involves a preamble, type, length and data.
+![hci](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/hci.png)
 
 ## Algorithm schemes
 The Bluetooth Mesh algorithm scheme works as follows:
