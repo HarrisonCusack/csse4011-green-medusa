@@ -12,7 +12,7 @@ The data recorded by each sensor will also be displayed on a web dashboard viewe
 ## Key performance indicators
 1. **Accuracy:** The air quality and weather data readings from the Thingy:52 is accurate - i.e. they closely match the 'real' values (15% leniency), and do not fluctuate extensively around these (15% leniency).
 2. **Coverage:** The region in which readings can be attained is large (i.e. more space than a single classroom). This ensures that the Bluetooth Mesh network is functioning as expected.
-3. **Data variety:** A variety of weather data related information can be requested from each sensor - i.e. more than four different types.
+3. **Data variety:** A variety of weather data related information can be requested from each sensor - i.e. at least four different types.
 4. **Latency:** Upon a data request, the user does not have to wait long for the reading to be relayed back to them - i.e. less than 3 seconds. Furthermore, the web dashboard updates in close to realtime (i.e. within 5 seconds).
 5. **Reliability:** Readings can be reliably obtained anytime - i.e. throughout the entire testing period, there are no software crashes.
 6. **Presentation:** The commands that users type to obtain data readings are simple and intuitive. The data is relayed back to the user in a simple, interpretable way. The web dashboard is visually concise and well presented.
@@ -54,9 +54,10 @@ How the sensors will be integrated:
 - The devices themselves will interact with each other by sending messages via configuration servers established in the mesh network. These configuration servers will be specific to a particular application key and network key (each device will be bound to the same application key).
 
 ## Wireless network communication
-- The Thingy:52 devices will connected amongst themselves via Bluetooth - specifically, the mesh network.
+- The Thingy:52 devices will be connected amongst themselves via Bluetooth - specifically, the mesh network.
 - nRF52840 Dongle will join the mesh network when in range and flood the bluetooth message through the mesh network until the specified mote device receives the message. 
 This is done by sending the message to all nearby neighbours. When a mote receives a message, it checks if the message belongs to it before decided next action. If the message was for the mote, take a measurement depending on HCI and send back to original address through the mesh. If the message was not for the mote, send to nearest neighbour. Refer to diagram in system overview for a detailed software flowchart.
+- The Thingy:52s will use configuration servers to communicate with each other. Specifically, a custom configuration server will be established which operates based on the message protocol (see below for the diagram). This configuration server will belong to a single attribute key that all devices are bound to.
 
 **Message protocol diagram**
 
