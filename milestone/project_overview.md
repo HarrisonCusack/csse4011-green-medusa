@@ -33,6 +33,8 @@ The data recorded by each sensor will also be displayed on a web dashboard viewe
 ![third](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/detailed_flowcharts.png)
 
 
+
+
 ## Sensor integration
 Sensors that will be used:
 - Thingy:52
@@ -56,9 +58,15 @@ How the sensors will be integrated:
 - nRF52840 Dongle will join the mesh network when in range and flood the bluetooth message through the mesh network until the specified mote device receives the message. 
 This is done by sending the message to all nearby neighbours. When a mote receives a message, it checks if the message belongs to it before decided next action. If the message was for the mote, take a measurement depending on HCI and send back to original address through the mesh. If the message was not for the mote, send to nearest neighbour. Refer to diagram in system overview for a detailed software flowchart.
 
+**Message protocol diagram**
+
+![fourth](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/message_protocol_diagram.png)
+
 The HCI format involves an array of bytes sent through bluetooth.
 This involves a preamble, type, length and data.
 ![hci](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/hci.png)
+
+
 
 ## Algorithm schemes
 The Bluetooth Mesh algorithm scheme works as follows:
