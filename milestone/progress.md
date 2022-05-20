@@ -20,6 +20,10 @@
 ## 18th of May
 - Finalised ideas around sensor integration and system design.
 - Completed block diagrams for the program logic flow.
+- Completed hardware architecture diagram.
 
 ## 19th of May
 - Finalised milestone components.
+
+## 20th of May
+- Decided on final roles for the project.
