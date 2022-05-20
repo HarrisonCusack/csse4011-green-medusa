@@ -19,17 +19,19 @@ The data recorded by each sensor will also be displayed on a web dashboard viewe
 
 
 ## System overview
-**Detailed software flowcharts for PC and mote**
 
-![first](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/detailed_flowcharts.png)
+**Block diagram of system**
+
+![first](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/hardware_diagram.png)
 
 **Top level flowchart**
 
 ![second](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/top_level_flowchart.png)
 
-**Block diagram of system**
+**Detailed software flowcharts for PC and mote**
 
-![third](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/hardware_diagram.png)
+![third](https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/detailed_flowcharts.png)
+
 
 ## Sensor integration
 Sensors that will be used:
