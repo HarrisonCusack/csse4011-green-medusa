@@ -35,11 +35,16 @@ Types of data required:
 - eCO2 Index
 
 How the sensors will be integrated:
-- Thingy:52 device includes all sensors and will be accessed using Zephyr sensor API
+- Thingy:52 device includes all sensors and will be accessed using Zephyr sensor API in an identical fashion to Practical 1.
+- The devices themselves will interact with each other by sending messages via configuration servers established in the mesh network. These configuration servers will be specific to a particular application key and network key (each device will be bound to the same application key).
 
 ## Wireless network communication
 - nRF52840 Dongle connects to Thingy:52 via Bluetooth Mesh
 - The Thingy:52 devices will connected amongst themselves via Bluetooth - specifically, the mesh network. **NEED MORE INFO HERE ABOUT HOW THE COMMUNICATION ACTUALLY HAPPENS. IS IT VIA GATT?**
 
 ## Algorithm schemes
-Mesh flooding algorithm
+The Bluetooth Mesh algorithm scheme works as follows:
+
+If a device receives a message, check if it has already received the message. If so, discard it. If not, then check if the message was addressed to itself. If so, process it appropriately (which may include constructing another message to flood the network with). If not, flood the network with the same message.
+
+Furthermore, devices in range of the PC will send messages to it. The PC itself will process messages addressed to itself that it hasn't received before, and discard others.
