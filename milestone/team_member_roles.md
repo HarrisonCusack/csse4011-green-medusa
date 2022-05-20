@@ -9,3 +9,5 @@ Thanh will also be responsible for parts of establishing the Bluetooth Mesh conn
 
 
 ## Team Photo
+
+https://github.com/HarrisonCusack/csse4011-green-medusa/blob/main/milestone/team_photo.PNG
