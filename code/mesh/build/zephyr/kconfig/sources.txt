@@ -806,7 +806,6 @@
 /home/harrison/csse4011/zephyrproject/zephyr/modules/trusted-firmware-m/Kconfig.tfm
 /home/harrison/csse4011/zephyrproject/zephyr/modules/trusted-firmware-m/Kconfig.tfm.crypto_modules
 /home/harrison/csse4011/zephyrproject/zephyr/modules/trusted-firmware-m/Kconfig.tfm.partitions
-/home/harrison/csse4011/zephyrproject/zephyr/samples/bluetooth/mesh/build/Kconfig/Kconfig.modules
 /home/harrison/csse4011/zephyrproject/zephyr/samples/subsys/usb/usb_pid.Kconfig
 /home/harrison/csse4011/zephyrproject/zephyr/soc/Kconfig
 /home/harrison/csse4011/zephyrproject/zephyr/soc/arm/Kconfig
@@ -1518,4 +1517,5 @@
 /home/harrison/csse4011/zephyrproject/zephyr/subsys/usb/class/dfu/Kconfig
 /home/harrison/csse4011/zephyrproject/zephyr/subsys/usb/class/hid/Kconfig
 /home/harrison/csse4011/zephyrproject/zephyr/subsys/usb/class/netusb/Kconfig
+/home/harrison/project/csse4011-green-medusa/code/mesh/build/Kconfig/Kconfig.modules
 /opt/zephyr-sdk-0.13.2/cmake/zephyr/Kconfig
