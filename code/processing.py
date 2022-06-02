@@ -4,6 +4,8 @@ import time
 import re
 import math
 import sys
+import threading
+
 
 import numpy as np
 
@@ -12,6 +14,12 @@ CLEAR_CHAR = chr(0x1b) + "[J"
 ESCAPE_CHAR = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 serialPort = serial.Serial("/dev/serial/by-id/usb-Wilfred_MK_USB_Console_Tute_EC10EDEC405209D1-if00", 115200)
+
+def send_serial():
+    while True:
+        x = input()
+        y = x + '\n'
+        serialPort.write(y.encode('ascii', 'ignore'))
 
 class Kalman:
     def __init__(self, x_init, cov_init, meas_err, proc_err):
@@ -43,19 +51,26 @@ class Kalman:
 
 def begin():
 
+    x = threading.Thread(target=send_serial)
+    x.start()
+
     while True:
-        
+    
         rawInput = serialPort.readline().decode("utf-8").strip()
-        
         processingInput = ESCAPE_CHAR.sub('', rawInput.split(CLEAR_CHAR)[-1])
         processedInput = processingInput.split(" ")
+
+        if (len(processedInput) == 4):
+            
+            print("Node:", processedInput[0], ", Time:", processedInput[1], ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+        
 
         # try:
         #     newValues = [float(i) for i in newValues2]
         # except:
         #     newValues = oldValues
 
-        print("Node:", processedInput[0], ", Time:", processedInput[1], ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+        #print("Node:", processedInput[0], ", Time:", processedInput[1], ", Sensor:", processedInput[2], ", Data:", processedInput[3])
 
 
 if __name__ == '__main__':

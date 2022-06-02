@@ -61,6 +61,8 @@
 #define OP_ONOFF_SET_UNACK BT_MESH_MODEL_OP_2(0x82, 0x03)
 #define OP_ONOFF_STATUS    BT_MESH_MODEL_OP_2(0x82, 0x04)
 
+static int gen_onoff_send(uint8_t device);
+
 //Message OP-Codes (7.1-Message Summary table - MeshModel) 
 #define BT_MESH_MODEL_OP_SENSOR_GET BT_MESH_MODEL_OP_2(0x82, 0x31)
 #define BT_MESH_MODEL_OP_SENSOR_STATUS BT_MESH_MODEL_OP_2(0x00, 0x52)
@@ -68,12 +70,6 @@
 #define BT_MESH_MODEL_OP_SENSOR_COLUMN_STATUS BT_MESH_MODEL_OP_2(0x00, 0x53)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_GET BT_MESH_MODEL_OP_2(0x82, 0x33)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_STATUS BT_MESH_MODEL_OP_2(0x00, 0x54)
-
-float pressure; // default value for testing
-float humidity;
-float temperature;
-float voc;
-float dust;
 
 void thread_cli(void);
 
@@ -85,13 +81,21 @@ static int cmd_pressure(const struct shell *, size_t, char **);
 static int cmd_humidity(const struct shell *, size_t, char **);
 static int cmd_temperature(const struct shell *, size_t, char **);
 static int cmd_voc(const struct shell *, size_t, char **);
-static int cmd_dust(const struct shell *, size_t, char **);
+static int cmd_eco2(const struct shell *, size_t, char **);
+static int cmd_pm(const struct shell *, size_t, char **);
+static int cmd_nox(const struct shell *, size_t, char **);
+
+
 
 SHELL_CMD_REGISTER(pressure, NULL, "read pressure", cmd_pressure);
 SHELL_CMD_REGISTER(humidity, NULL, "read humidity", cmd_humidity);
 SHELL_CMD_REGISTER(temperature, NULL, "read temperature", cmd_temperature);
 SHELL_CMD_REGISTER(voc, NULL, "read voc", cmd_voc);
-SHELL_CMD_REGISTER(dust, NULL, "read dust", cmd_dust);
+SHELL_CMD_REGISTER(eco2, NULL, "read dust", cmd_eco2);
+SHELL_CMD_REGISTER(nox, NULL, "read dust", cmd_nox);
+SHELL_CMD_REGISTER(pm, NULL, "read dust", cmd_pm);
+
+
 
 
 static const uint8_t net_key[16] = {
@@ -324,7 +328,7 @@ static const struct bt_mesh_model_op gen_onoff_srv_op[] = {
 static int cmd_pressure(const struct shell *shell, size_t argc, char **argv) {
 	ARG_UNUSED(argc);
 
-	LOG_INF("Pressure is %f", pressure);
+	gen_onoff_send(PRESSURE);
 
 	return 0;
 }
@@ -332,28 +336,51 @@ static int cmd_pressure(const struct shell *shell, size_t argc, char **argv) {
 static int cmd_humidity(const struct shell *shell, size_t argc, char **argv) {
 	ARG_UNUSED(argc);
 
-	LOG_INF("Humidity is %f", humidity);
+	gen_onoff_send(HUMIDITY);
 	return 0;
 }
 
 static int cmd_temperature(const struct shell *shell, size_t argc, char **argv) {
 	ARG_UNUSED(argc);
 
-	LOG_INF("Temperature is %f", temperature);
+	gen_onoff_send(TEMPERATURE);
 	return 0;
 }
 
 static int cmd_voc(const struct shell *shell, size_t argc, char **argv) {
 	ARG_UNUSED(argc);
 
-	LOG_INF("VOC is %f", voc);
+	gen_onoff_send(VOC);
 	return 0;
 }
 
-static int cmd_dust(const struct shell *shell, size_t argc, char **argv) {
+static int cmd_eco2(const struct shell *shell, size_t argc, char **argv) {
 	ARG_UNUSED(argc);
 
-	LOG_INF("Dust is %f", dust);
+	gen_onoff_send(ECO2);
+	return 0;
+}
+
+static int cmd_nox(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	gen_onoff_send(NOX);
+	return 0;
+}
+
+static int cmd_pm(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	if (argv[1][0] == '1') {
+		gen_onoff_send(PM1_0);
+	} else if (argv[1][0] == '2') {
+		gen_onoff_send(PM2_5);
+	} else if (argv[1][0] == '4') {
+		gen_onoff_send(PM4_0);
+	} else {
+		gen_onoff_send(PM10_0);
+	}
+
 	return 0;
 }
 
@@ -379,20 +406,6 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 	uint32_t data = net_buf_simple_pull_le32(buf);
 	printk("%d %d %d %f\n", address, time, type, *((float *)(&data)));
 	//printk("Node: %d\tTime: %d\t Sensor: %d\tData: %f\n", address, time, type, *((float *)(&data))); HARRISON COMMENTED
-
-	float thisData = *((float *)(&data));
-
-	if (type == 1) {
-		pressure = thisData;
-	} else if (type == 2) {
-		humidity = thisData;
-	} else if (type == 3) {
-		temperature = thisData;
-	} else if (type == 4) {
-		voc = thisData;
-	} else if (type == 5) {
-		dust = thisData;
-	}
 
 	//printk("%02x %02x %02x %02x %02x %08x\n", tid, address, preamble, type, length, data);
 	if (tid == onoff.tid && address != ctx->addr) {
@@ -489,7 +502,7 @@ static int gen_onoff_send(uint8_t device)
 	net_buf_simple_add_u8(&buf, NODE_ADDR);
 	net_buf_simple_add_u8(&buf, PREAMBLE);
 	net_buf_simple_add_u8(&buf, REQUEST);
-	net_buf_simple_add_u8(&buf, 4);
+	net_buf_simple_add_u8(&buf, 5);
 	net_buf_simple_add_le32(&buf, k_uptime_get_32());
 	net_buf_simple_add_u8(&buf, device);
 
@@ -644,12 +657,6 @@ void main(void)
         return;
 	}
 
-	pressure = 42.137;
-	humidity = 42.137;
-	temperature = 42.137;
-	voc = 42.137;
-	dust = 42.137;
-
 	static struct k_work button_work;
 	int err = -1;
 
@@ -680,18 +687,5 @@ void main(void)
 		printk("Bluetooth init failed (err %d)\n", err);
 	}
 	int device = 1;
-	while(1) {
-		
-		if (bt_mesh_is_provisioned()) {
-			(void)gen_onoff_send(device);
-			device++;
-		}
-		
-		if (device > 0x0a) {
-			device = 1;
-		}
-
-		//printk("tick\n"); HARRISON COMMENTED
-		k_sleep(K_MSEC(5000));
-	}
+	
 }
