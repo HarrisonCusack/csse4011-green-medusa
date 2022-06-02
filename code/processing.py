@@ -31,7 +31,7 @@ class Kalman:
         self.Q_k = np.eye(ndim)*proc_err #covariance matrix of process noise
         self.R = np.eye(len(self.H))*meas_err   #covariance matrix of observation noise
         
-    def update(self, obs, heading):
+    def update(self, obs):
 
         # Make prediction
         self.x_hat_est = np.dot(self.A,self.x_hat) #+ np.array([0.5 * math.cos(math.radians(heading)), 
@@ -56,6 +56,11 @@ def begin():
     x = threading.Thread(target=send_serial)
     x.start()
 
+    k_temperature = Kalman(np.array([24]), np.eye(ndim), 1, 1)
+    k_humidity = Kalman(np.array([35]), np.eye(ndim), 1, 1)
+    k_pressure = Kalman(np.array([101]), np.eye(ndim), 1, 1)
+    k_voc = Kalman(np.array([10]), np.eye(ndim), 1, 1)
+
     while True:
     
         rawInput = serialPort.readline().decode("utf-8").strip()
@@ -63,7 +68,27 @@ def begin():
         processedInput = processingInput.split(" ")
 
         if (len(processedInput) == 4):
-            print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+            if (processedInput[0] == '3'):
+                if (processedInput[2] == '1'):
+                    k_pressure.update(np.array([float(processedInput[3])]))
+                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_pressure.x_hat[0])
+                elif (processedInput[2] == '3'):
+                    k_temperature.update(np.array([float(processedInput[3])]))
+                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_temperature.x_hat[0])
+                elif (processedInput[2] == '4'):
+                    k_humidity.update(np.array([float(processedInput[3])]))
+                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_humidity.x_hat[0])
+                elif (processedInput[2] == '5'):
+                    k_voc.update(np.array([float(processedInput[3])]))
+                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_voc.x_hat[0])
+                else:
+                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])    
+            else:
+                print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+            
+
+            
+        
         elif (len(processedInput) == 1 and len(processedInput[0]) > 1):
             if (processedInput[0][-2] == "n"):
                 currentTime = time.time()
@@ -78,4 +103,5 @@ def begin():
 
 
 if __name__ == '__main__':
+    ndim = 1
     begin()
