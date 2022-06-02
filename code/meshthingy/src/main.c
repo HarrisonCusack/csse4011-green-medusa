@@ -59,7 +59,7 @@ K_THREAD_DEFINE(timer_thread, MY_STACK_SIZE,
 #define NOX 0x0a
 #define RANDOM_8 (k_uptime_get_32() & 0xFF)
 
-#define NODE_ADDR 0x0003
+#define NODE_ADDR 0x0004
 
 #define OP_ONOFF_GET       BT_MESH_MODEL_OP_2(0x82, 0x01)
 #define OP_ONOFF_SET       BT_MESH_MODEL_OP_2(0x82, 0x02)

@@ -253,7 +253,7 @@ static int gen_onoff_set_unack(struct bt_mesh_model *model,
 	// k_work_reschedule(&onoff.work, K_MSEC(delay));
 
 	if (type != 0x0002) {
-		printk("%02x %02x %02x %02x %08x\n", tid, preamble, type, length, data);
+		//printk("%02x %02x %02x %02x %08x\n", tid, preamble, type, length, data); HARRISON COMMENTED
 	}
 
 	return 0;
@@ -283,13 +283,13 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
 {
-	printk("gen_onoff_status()\n");
+	//printk("gen_onoff_status()\n"); HARRISON COMMENTED
 
-	printk("Got ");
+	//printk("Got "); HARRISON COMMENTED
 	for (int i = 0; i < buf->len; i++) {
-		printk("%02x ", buf->data[i]);
+		//printk("%02x ", buf->data[i]); HARRISON COMMENTED
 	}
-	printk("\n");
+	//printk("\n"); HARRISON COMMENTED
 	
 	uint8_t tid = net_buf_simple_pull_u8(buf);
 	uint8_t random = net_buf_simple_pull_u8(buf);
@@ -299,7 +299,8 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 	uint8_t length = net_buf_simple_pull_u8(buf);
 	uint32_t time = net_buf_simple_pull_le32(buf);
 	uint32_t data = net_buf_simple_pull_le32(buf);
-	printk("Node: %d\tTime: %d\t Sensor: %d\tData: %f\n", address, time, type, *((float *)(&data)));
+	printk("%d %d %d %f\n", address, time, type, *((float *)(&data)));
+	//printk("Node: %d\tTime: %d\t Sensor: %d\tData: %f\n", address, time, type, *((float *)(&data))); HARRISON COMMENTED
 
 	//printk("%02x %02x %02x %02x %02x %08x\n", tid, address, preamble, type, length, data);
 	if (tid == onoff.tid && address != ctx->addr) {
@@ -375,7 +376,7 @@ static const struct bt_mesh_prov prov = {
 /** Send an OnOff Set message from the Generic OnOff Client to all nodes. */
 static int gen_onoff_send(uint8_t device)
 {
-	printk("gen_onoff_send()\n");
+	//printk("gen_onoff_send()\n"); HARRISON COMMENTED
 	struct bt_mesh_msg_ctx ctx = {
 		.app_idx = models[3].keys[0], /* Use the bound key */
 		.addr = BT_MESH_ADDR_ALL_NODES,
@@ -401,11 +402,11 @@ static int gen_onoff_send(uint8_t device)
 	net_buf_simple_add_u8(&buf, device);
 
 	
-	printk("Sending ");
+	//printk("Sending "); HARRISON COMMENTED
 	for (int i = 0; i < buf.len; i++) {
-		printk("%02x ", buf.data[i]);
+		//printk("%02x ", buf.data[i]); HARRISON COMMENTED
 	}
-	printk("\n");
+	//printk("\n"); HARRISON COMMENTED
 
 	return bt_mesh_model_send(&models[3], &ctx, &buf, NULL, NULL);
 }
@@ -413,7 +414,7 @@ static int gen_onoff_send(uint8_t device)
 static void configure(void)
 {
 	int err;
-	printk("Configuring...\n");
+	//printk("Configuring...\n"); HARRISON COMMENTED
 
 	/* Add Application Key */
 	// err = bt_mesh_cfg_app_key_add(net_idx, addr, net_idx, app_idx, app_key, NULL);
@@ -435,9 +436,9 @@ static void configure(void)
 	models[2].keys[0] = app_idx;
 	models[3].keys[0] = app_idx;
 
-	printk("Provisioned and configured!\n");
+	//printk("Provisioned and configured!\n"); HARRISON COMMENTED
 
-	printk("Configuration complete\n");
+	//printk("Configuration complete\n"); HARRISON COMMENTED
 }
 
 static void button_pressed(struct k_work *work)
@@ -502,7 +503,7 @@ static void bt_ready(int err)
 		return;
 	}
 
-	printk("Bluetooth initialized\n");
+	//printk("Bluetooth initialized\n"); HARRISON COMMENTED
 
 	err = bt_mesh_init(&prov, &comp);
 	if (err) {
@@ -511,7 +512,7 @@ static void bt_ready(int err)
 	}
 
 	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
-		printk("Loading stored settings\n");
+		//printk("Loading stored settings\n"); HARRISON COMMENTED
 		settings_load();
 	}
 
@@ -523,14 +524,14 @@ static void bt_ready(int err)
 		printk("Provisioning failed (err %d)\n", err);
 		return;
 	} else {
-		printk("Provisioning completed\n");
+		//printk("Provisioning completed\n"); HARRISON COMMENTED
 		configure();
 	}
 
 	/* This will be a no-op if settings_load() loaded provisioning info */
 	//bt_mesh_prov_enable(BT_MESH_PROV_ADV | BT_MESH_PROV_GATT);
 
-	printk("Mesh initialized\n");
+	//printk("Mesh initialized\n"); HARRISON COMMENTED
 }
 
 void main(void)
@@ -543,7 +544,7 @@ void main(void)
 	static struct k_work button_work;
 	int err = -1;
 
-	printk("Initializing...\n");
+	//printk("Initializing...\n"); HARRISON COMMENTED
 
 	if (IS_ENABLED(CONFIG_HWINFO)) {
 		err = hwinfo_get_device_id(dev_uuid, sizeof(dev_uuid));
@@ -581,7 +582,7 @@ void main(void)
 			device = 1;
 		}
 
-		printk("tick\n");
+		//printk("tick\n"); HARRISON COMMENTED
 		k_sleep(K_MSEC(5000));
 	}
 }
