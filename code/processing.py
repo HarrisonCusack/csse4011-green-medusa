@@ -51,6 +51,8 @@ class Kalman:
 
 def begin():
 
+    currentTime = time.time()
+
     x = threading.Thread(target=send_serial)
     x.start()
 
@@ -61,8 +63,10 @@ def begin():
         processedInput = processingInput.split(" ")
 
         if (len(processedInput) == 4):
-            
-            print("Node:", processedInput[0], ", Time:", processedInput[1], ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+            print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+        elif (len(processedInput) == 1):
+            if (processedInput[0][-2] == "n"):
+                currentTime = time.time()
         
 
         # try:

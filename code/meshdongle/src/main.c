@@ -42,6 +42,7 @@
 
 #define PREAMBLE 0xAF
 #define REQUEST 0xFF
+#define RESET 0xFF
 #define PRESSURE 0x01
 #define ECO2 0x02
 #define TEMPERATURE 0x03
@@ -62,6 +63,9 @@
 #define OP_ONOFF_STATUS    BT_MESH_MODEL_OP_2(0x82, 0x04)
 
 static int gen_onoff_send(uint8_t device);
+static int gen_onoff_send2(uint8_t device);
+
+
 
 //Message OP-Codes (7.1-Message Summary table - MeshModel) 
 #define BT_MESH_MODEL_OP_SENSOR_GET BT_MESH_MODEL_OP_2(0x82, 0x31)
@@ -71,12 +75,28 @@ static int gen_onoff_send(uint8_t device);
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_GET BT_MESH_MODEL_OP_2(0x82, 0x33)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_STATUS BT_MESH_MODEL_OP_2(0x00, 0x54)
 
+uint32_t currentTime = 0;
+
+void timer_func(void* argv) 
+{    
+    // Increase time by 1 second
+    while(1) {
+        k_msleep(1);
+        currentTime++;
+    }
+}
+
+K_THREAD_DEFINE(timer_thread, 1024,
+                timer_func, NULL, NULL, NULL,
+                5, 0, 0);
+
 void thread_cli(void);
 
 K_THREAD_DEFINE(cli, 1024, thread_cli, NULL, NULL, NULL, 10, 0, 0);
 
 LOG_MODULE_REGISTER(weather_station, LOG_LEVEL_DBG);
 
+static int cmd_reset(const struct shell *, size_t, char **);
 static int cmd_pressure(const struct shell *, size_t, char **);
 static int cmd_humidity(const struct shell *, size_t, char **);
 static int cmd_temperature(const struct shell *, size_t, char **);
@@ -84,18 +104,19 @@ static int cmd_voc(const struct shell *, size_t, char **);
 static int cmd_eco2(const struct shell *, size_t, char **);
 static int cmd_pm(const struct shell *, size_t, char **);
 static int cmd_nox(const struct shell *, size_t, char **);
+static int cmd_sync(const struct shell *, size_t, char **);
 
 
 
+SHELL_CMD_REGISTER(reset, NULL, "reset devices", cmd_reset);
 SHELL_CMD_REGISTER(pressure, NULL, "read pressure", cmd_pressure);
 SHELL_CMD_REGISTER(humidity, NULL, "read humidity", cmd_humidity);
 SHELL_CMD_REGISTER(temperature, NULL, "read temperature", cmd_temperature);
 SHELL_CMD_REGISTER(voc, NULL, "read voc", cmd_voc);
-SHELL_CMD_REGISTER(eco2, NULL, "read dust", cmd_eco2);
-SHELL_CMD_REGISTER(nox, NULL, "read dust", cmd_nox);
-SHELL_CMD_REGISTER(pm, NULL, "read dust", cmd_pm);
-
-
+SHELL_CMD_REGISTER(eco2, NULL, "read eco2", cmd_eco2);
+SHELL_CMD_REGISTER(nox, NULL, "read nox", cmd_nox);
+SHELL_CMD_REGISTER(pm, NULL, "read pm", cmd_pm);
+SHELL_CMD_REGISTER(sync, NULL, "sync times", cmd_sync);
 
 
 static const uint8_t net_key[16] = {
@@ -325,6 +346,14 @@ static const struct bt_mesh_model_op gen_onoff_srv_op[] = {
 
 /* Generic OnOff Client */
 
+static int cmd_reset(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	gen_onoff_send2(RESET);
+
+	return 0;
+}
+
 static int cmd_pressure(const struct shell *shell, size_t argc, char **argv) {
 	ARG_UNUSED(argc);
 
@@ -381,6 +410,17 @@ static int cmd_pm(const struct shell *shell, size_t argc, char **argv) {
 		gen_onoff_send(PM10_0);
 	}
 
+	return 0;
+}
+
+static int cmd_sync(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	board_led_set(true);
+	k_sleep(K_MSEC(50));
+	board_led_set(false);
+
+	currentTime = 0;
 	return 0;
 }
 
@@ -503,7 +543,44 @@ static int gen_onoff_send(uint8_t device)
 	net_buf_simple_add_u8(&buf, PREAMBLE);
 	net_buf_simple_add_u8(&buf, REQUEST);
 	net_buf_simple_add_u8(&buf, 5);
-	net_buf_simple_add_le32(&buf, k_uptime_get_32());
+	net_buf_simple_add_le32(&buf, currentTime);
+	net_buf_simple_add_u8(&buf, device);
+
+	
+	//printk("Sending "); HARRISON COMMENTED
+	for (int i = 0; i < buf.len; i++) {
+		//printk("%02x ", buf.data[i]); HARRISON COMMENTED
+	}
+	//printk("\n"); HARRISON COMMENTED
+
+	return bt_mesh_model_send(&models[3], &ctx, &buf, NULL, NULL);
+}
+
+static int gen_onoff_send2(uint8_t device)
+{
+	//printk("gen_onoff_send()\n"); HARRISON COMMENTED
+	struct bt_mesh_msg_ctx ctx = {
+		.app_idx = models[3].keys[0], /* Use the bound key */
+		.addr = BT_MESH_ADDR_ALL_NODES,
+		.send_ttl = BT_MESH_TTL_DEFAULT,
+	};
+	static uint8_t tid;
+
+	if (ctx.app_idx == BT_MESH_KEY_UNUSED) {
+		printk("The Generic OnOff Client must be bound to a key before "
+		       "sending.\n");
+		return -ENOENT;
+	}
+
+	BT_MESH_MODEL_BUF_DEFINE(buf, BT_MESH_MODEL_OP_SENSOR_STATUS, 3 + 3 + 4 + 1);
+	bt_mesh_model_msg_init(&buf, BT_MESH_MODEL_OP_SENSOR_STATUS);
+	net_buf_simple_add_u8(&buf, tid++);
+	net_buf_simple_add_u8(&buf, RANDOM_8);
+	net_buf_simple_add_u8(&buf, NODE_ADDR);
+	net_buf_simple_add_u8(&buf, PREAMBLE);
+	net_buf_simple_add_u8(&buf, REQUEST);
+	net_buf_simple_add_u8(&buf, 5);
+	net_buf_simple_add_le32(&buf, currentTime);
 	net_buf_simple_add_u8(&buf, device);
 
 	
