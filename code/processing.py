@@ -5,10 +5,13 @@ import re
 import math
 import sys
 import threading
+import tago
 
 
 import numpy as np
 
+my_device = tago.Device('ff867015-eef4-41ab-8261-95c8b0fd758f')
+device_information = my_device.info()
 
 CLEAR_CHAR = chr(0x1b) + "[J"
 ESCAPE_CHAR = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
@@ -55,6 +58,7 @@ def begin():
 
     x = threading.Thread(target=send_serial)
     x.start()
+    previous_sensor = ""
 
     k_temperature = Kalman(np.array([24]), np.eye(ndim), 1, 1)
     k_humidity = Kalman(np.array([35]), np.eye(ndim), 1, 1)
@@ -68,24 +72,61 @@ def begin():
         processedInput = processingInput.split(" ")
 
         if (len(processedInput) == 4):
+            if(processedInput[2] != previous_sensor):
+                filter = {'qty':50000}
+                result = my_device.remove(filter)
+            previous_sensor = processedInput[2]
             if (processedInput[0] == '3'):
                 if (processedInput[2] == '1'):
                     k_pressure.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_pressure.x_hat[0])
+                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_pressure.x_hat[0])
                 elif (processedInput[2] == '3'):
                     k_temperature.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_temperature.x_hat[0])
+                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_temperature.x_hat[0])
                 elif (processedInput[2] == '4'):
                     k_humidity.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_humidity.x_hat[0])
+                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_humidity.x_hat[0])
                 elif (processedInput[2] == '5'):
                     k_voc.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_voc.x_hat[0])
+                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_voc.x_hat[0])
                 else:
-                    print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])    
+                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])    
             else:
-                print("Node:", processedInput[0], ", Time:", time.asctime(time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+                print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])
             
+            unit = ""
+            if (processedInput[2] == '1'):
+                unit = "kPa"
+            elif (processedInput[2] == '2'):
+                unit = "index"
+            elif (processedInput[2] == '3'):
+                unit = "C"
+            elif (processedInput[2] == '4'):
+                unit = "RH%"
+            elif (processedInput[2] == '5'):
+                unit = "index"
+            elif (processedInput[2] == '6'):
+                unit = "ug/m^3"
+            elif (processedInput[2] == '7'):
+                unit = "ug/m^3"
+            elif (processedInput[2] == '8'):
+                unit = "ug/m^3"
+            elif (processedInput[2] == '9'):
+                unit = "ug/m^3"
+            elif (processedInput[2] == '10'):
+                unit = "index"
+
+            data = []
+            data.append(
+                {
+                'variable': 'node' + processedInput[0],
+                'value': processedInput[3],
+                'time' : time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)),
+                'unit': unit
+                }
+            )
+
+            result = my_device.insert(data)
 
             
         
