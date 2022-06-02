@@ -8,6 +8,7 @@ project(meshargon)
 
 target_sources(app PRIVATE src/main.c)
 target_sources(app PRIVATE src/board.c)
+target_sources(app PRIVATE src/battery.c)
 
 if(NODE_ADDR)
   zephyr_compile_definitions(NODE_ADDR=${NODE_ADDR})

@@ -17,6 +17,8 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/mesh.h>
 
+#include <zephyr.h>
+#include "battery.h"
 #include "board.h"
 
 #include <sys/util.h>
@@ -74,6 +76,31 @@ K_THREAD_DEFINE(timer_thread, MY_STACK_SIZE,
                 timer_func, NULL, NULL, NULL,
                 MY_PRIORITY, 0, 0);
 
+/** A discharge curve specific to the power source. */
+static const struct battery_level_point levels[] = {
+#if DT_NODE_HAS_PROP(DT_INST(0, voltage_divider), io_channels)
+	/* "Curve" here eyeballed from captured data for the [Adafruit
+	 * 3.7v 2000 mAh](https://www.adafruit.com/product/2011) LIPO
+	 * under full load that started with a charge of 3.96 V and
+	 * dropped about linearly to 3.58 V over 15 hours.  It then
+	 * dropped rapidly to 3.10 V over one hour, at which point it
+	 * stopped transmitting.
+	 *
+	 * Based on eyeball comparisons we'll say that 15/16 of life
+	 * goes between 3.95 and 3.55 V, and 1/16 goes between 3.55 V
+	 * and 3.1 V.
+	 */
+
+	{ 10000, 3950 },
+	{ 625, 3550 },
+	{ 0, 3100 },
+#else
+	/* Linear from maximum voltage to minimum voltage. */
+	{ 10000, 3600 },
+	{ 0, 1700 },
+#endif
+};
+
 #define PREAMBLE 0xAF
 #define REQUEST 0xFF
 #define PRESSURE 0x01
@@ -86,9 +113,10 @@ K_THREAD_DEFINE(timer_thread, MY_STACK_SIZE,
 #define PM4_0 0x08
 #define PM10_0 0x09
 #define NOX 0x0a
+#define BATTERY 0x0b
 #define RANDOM_8 (k_uptime_get_32() & 0xFF)
 
-#define NODE_ADDR 0x0006
+#define NODE_ADDR 0x0007
 
 #define OP_ONOFF_GET       BT_MESH_MODEL_OP_2(0x82, 0x01)
 #define OP_ONOFF_SET       BT_MESH_MODEL_OP_2(0x82, 0x02)
@@ -207,6 +235,19 @@ void sensor_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct
 			case 10:
 				send_sensor_data(model, ctx, device, sen54_read(device));
 				break;
+			case BATTERY:;
+				int batt_mV = battery_sample();
+
+				if (batt_mV < 0) {
+					printk("Failed to read battery voltage: %d\n",
+						batt_mV);
+					break;
+				}
+
+				unsigned int batt_pptt = battery_level_pptt(batt_mV, levels);
+
+				send_sensor_data(model, ctx, device, (float) batt_mV);
+				break;	
 		}
 	}
 
@@ -474,5 +515,12 @@ void main(void)
 	err = bt_enable(bt_ready);
 	if (err) {
 		printk("Bluetooth init failed (err %d)\n", err);
+	}
+
+	int rc = battery_measure_enable(true);
+
+	if (rc != 0) {
+		printk("Failed initialize battery measurement: %d\n", rc);
+		return;
 	}
 }

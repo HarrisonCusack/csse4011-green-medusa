@@ -1,0 +1,12 @@
+&pwm0 {
+  status = "okay";
+  ch0-pin = <0x1b>; 
+};
+/ {
+    aliases {
+        led1 = &led1;
+        led2 = &led2;
+        vddpwr = &vdd_pwr;
+        ccspwr = &ccs_pwr;
+    };
+};

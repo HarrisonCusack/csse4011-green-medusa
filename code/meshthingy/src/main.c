@@ -8,6 +8,9 @@
 
 #include <sys/printk.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <settings/settings.h>
 #include <devicetree.h>
 #include <device.h>
@@ -18,6 +21,8 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/mesh.h>
 
+#include <zephyr.h>
+#include "battery.h"
 #include "board.h"
 #include "scu_sensors.h"
 
@@ -45,6 +50,40 @@ K_THREAD_DEFINE(timer_thread, MY_STACK_SIZE,
                 timer_func, NULL, NULL, NULL,
                 MY_PRIORITY, 0, 0);
 
+#define LED0_NODE DT_ALIAS(led0)
+#define LED1_NODE DT_ALIAS(led1)
+#define LED2_NODE DT_ALIAS(led2)
+
+// LED device tree spec
+static const struct gpio_dt_spec red_led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+static const struct gpio_dt_spec green_led = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
+static const struct gpio_dt_spec blue_led = GPIO_DT_SPEC_GET(LED2_NODE, gpios);				
+
+/** A discharge curve specific to the power source. */
+static const struct battery_level_point levels[] = {
+#if DT_NODE_HAS_PROP(DT_INST(0, voltage_divider), io_channels)
+	/* "Curve" here eyeballed from captured data for the [Adafruit
+	 * 3.7v 2000 mAh](https://www.adafruit.com/product/2011) LIPO
+	 * under full load that started with a charge of 3.96 V and
+	 * dropped about linearly to 3.58 V over 15 hours.  It then
+	 * dropped rapidly to 3.10 V over one hour, at which point it
+	 * stopped transmitting.
+	 *
+	 * Based on eyeball comparisons we'll say that 15/16 of life
+	 * goes between 3.95 and 3.55 V, and 1/16 goes between 3.55 V
+	 * and 3.1 V.
+	 */
+
+	{ 10000, 3950 },
+	{ 625, 3550 },
+	{ 0, 3100 },
+#else
+	/* Linear from maximum voltage to minimum voltage. */
+	{ 10000, 3600 },
+	{ 0, 1700 },
+#endif
+};
+
 #define PREAMBLE 0xAF
 #define REQUEST 0xFF
 #define PRESSURE 0x01
@@ -57,9 +96,10 @@ K_THREAD_DEFINE(timer_thread, MY_STACK_SIZE,
 #define PM4_0 0x08
 #define PM10_0 0x09
 #define NOX 0x0a
+#define BATTERY 0x0b
 #define RANDOM_8 (k_uptime_get_32() & 0xFF)
 
-#define NODE_ADDR 0x0004
+#define NODE_ADDR 0x0005
 
 #define OP_ONOFF_GET       BT_MESH_MODEL_OP_2(0x82, 0x01)
 #define OP_ONOFF_SET       BT_MESH_MODEL_OP_2(0x82, 0x02)
@@ -168,7 +208,37 @@ void sensor_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct
 			case 5:
 				send_sensor_data(model, ctx, device, scu_ccs811_read_voc());
 				break;
-			
+			case BATTERY:;
+				int batt_mV = battery_sample();
+
+				if (batt_mV < 0) {
+					printk("Failed to read battery voltage: %d\n",
+						batt_mV);
+					break;
+				}
+
+				unsigned int batt_pptt = battery_level_pptt(batt_mV, levels);
+
+				if (batt_mV < 3600) {
+					gpio_pin_set_dt(&red_led, 0);	
+					gpio_pin_set_dt(&green_led, 1);	
+					gpio_pin_set_dt(&blue_led, 1);
+				} else if (batt_mV > 3800) {
+					gpio_pin_set_dt(&red_led, 1);	
+					gpio_pin_set_dt(&green_led, 0);	
+					gpio_pin_set_dt(&blue_led, 1);
+				} else {
+					gpio_pin_set_dt(&red_led, 0);	
+					gpio_pin_set_dt(&green_led, 0);	
+					gpio_pin_set_dt(&blue_led, 1);
+				}
+				send_sensor_data(model, ctx, device, (float) batt_mV);
+				k_msleep(5000);
+				gpio_pin_set_dt(&red_led, 1);	
+				gpio_pin_set_dt(&green_led, 1);	
+				gpio_pin_set_dt(&blue_led, 1);
+				board_led_set(false);
+				break;	
 		}
 	}
 
@@ -386,5 +456,12 @@ void main(void)
 	err = bt_enable(bt_ready);
 	if (err) {
 		printk("Bluetooth init failed (err %d)\n", err);
+	}
+
+	int rc = battery_measure_enable(true);
+
+	if (rc != 0) {
+		printk("Failed initialize battery measurement: %d\n", rc);
+		return;
 	}
 }
