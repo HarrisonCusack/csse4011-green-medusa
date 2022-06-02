@@ -75,6 +75,33 @@ static int gen_onoff_send2(uint8_t device);
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_GET BT_MESH_MODEL_OP_2(0x82, 0x33)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_STATUS BT_MESH_MODEL_OP_2(0x00, 0x54)
 
+typedef struct communication_packet {
+    uint8_t sensor;
+	uint16_t time;
+} communication_packet;
+
+communication_packet data_recv;
+uint8_t running = 0;
+
+void print_func(void* argv) 
+{    
+
+    while(1) {
+		
+		while(running == 1) {
+			gen_onoff_send(data_recv.sensor);
+			k_msleep(data_recv.time);
+		}
+		k_msleep(1);
+    }
+}
+
+
+K_THREAD_DEFINE(print_thread, 1024,
+                print_func, NULL, NULL, NULL,
+                2, 0, 0);
+
+
 uint32_t currentTime = 0;
 
 void timer_func(void* argv) 
@@ -355,59 +382,139 @@ static int cmd_reset(const struct shell *shell, size_t argc, char **argv) {
 }
 
 static int cmd_pressure(const struct shell *shell, size_t argc, char **argv) {
-	ARG_UNUSED(argc);
 
-	gen_onoff_send(PRESSURE);
+	if (argc == 1) {
+		gen_onoff_send(PRESSURE);
+	} else{
+		if (argv[1][2] == 'a') {
+			running = 0;
+			data_recv.sensor = PRESSURE;
+			data_recv.time = atoi(argv[2]);
+			running = 1;
+		} else {
+			running = 0;
+		}
+	}
 
 	return 0;
 }
 
 static int cmd_humidity(const struct shell *shell, size_t argc, char **argv) {
-	ARG_UNUSED(argc);
 
-	gen_onoff_send(HUMIDITY);
+	if (argc == 1) {
+		gen_onoff_send(HUMIDITY);
+	} else{
+		if (argv[1][2] == 'a') {
+			running = 0;
+			data_recv.sensor = HUMIDITY;
+			data_recv.time = atoi(argv[2]);
+			running = 1;
+		} else {
+			running = 0;
+		}
+	}
 	return 0;
 }
 
 static int cmd_temperature(const struct shell *shell, size_t argc, char **argv) {
-	ARG_UNUSED(argc);
 
-	gen_onoff_send(TEMPERATURE);
+	if (argc == 1) {
+		gen_onoff_send(TEMPERATURE);
+	} else{
+		if (argv[1][2] == 'a') {
+			running = 0;
+			data_recv.sensor = TEMPERATURE;
+			data_recv.time = atoi(argv[2]);
+			running = 1;
+		} else {
+			running = 0;
+		}
+	}
 	return 0;
 }
 
 static int cmd_voc(const struct shell *shell, size_t argc, char **argv) {
-	ARG_UNUSED(argc);
 
-	gen_onoff_send(VOC);
+	if (argc == 1) {
+		gen_onoff_send(VOC);
+	} else{
+		if (argv[1][2] == 'a') {
+			running = 0;
+			data_recv.sensor = VOC;
+			data_recv.time = atoi(argv[2]);
+			running = 1;
+		} else {
+			running = 0;
+		}
+	}
 	return 0;
 }
 
 static int cmd_eco2(const struct shell *shell, size_t argc, char **argv) {
-	ARG_UNUSED(argc);
 
-	gen_onoff_send(ECO2);
+	if (argc == 1) {
+		gen_onoff_send(ECO2);
+	} else{
+		if (argv[1][2] == 'a') {
+			running = 0;
+			data_recv.sensor = ECO2;
+			data_recv.time = atoi(argv[2]);
+			running = 1;
+		} else {
+			running = 0;
+		}
+	}
 	return 0;
 }
 
 static int cmd_nox(const struct shell *shell, size_t argc, char **argv) {
-	ARG_UNUSED(argc);
 
-	gen_onoff_send(NOX);
+	if (argc == 1) {
+		gen_onoff_send(NOX);
+	} else{
+		if (argv[1][2] == 'a') {
+			running = 0;
+			data_recv.sensor = NOX;
+			data_recv.time = atoi(argv[2]);
+			running = 1;
+		} else {
+			running = 0;
+		}
+	}
 	return 0;
 }
 
 static int cmd_pm(const struct shell *shell, size_t argc, char **argv) {
 	ARG_UNUSED(argc);
 
-	if (argv[1][0] == '1') {
-		gen_onoff_send(PM1_0);
-	} else if (argv[1][0] == '2') {
-		gen_onoff_send(PM2_5);
-	} else if (argv[1][0] == '4') {
-		gen_onoff_send(PM4_0);
+	if (argc == 2) {
+
+		if (argv[1][0] == '1') {
+			gen_onoff_send(PM1_0);
+		} else if (argv[1][0] == '2') {
+			gen_onoff_send(PM2_5);
+		} else if (argv[1][0] == '3') {
+			gen_onoff_send(PM4_0);
+		} else {
+			gen_onoff_send(PM10_0);
+		}
 	} else {
-		gen_onoff_send(PM10_0);
+		if (argv[2][2] == 'a') {
+			running = 0;
+			if (argv[1][0] == '1') {
+				data_recv.sensor = PM1_0;
+			} else if (argv[1][0] == '2') {
+				data_recv.sensor = PM2_5;
+			} else if (argv[1][0] == '3') {
+				data_recv.sensor = PM4_0;
+			} else {
+				data_recv.sensor = PM10_0;
+			}
+			data_recv.time = atoi(argv[3]);
+			running = 1;
+		} else {
+			running = 0;
+		}
 	}
 
 	return 0;
@@ -534,6 +641,10 @@ static int gen_onoff_send(uint8_t device)
 		       "sending.\n");
 		return -ENOENT;
 	}
+
+	board_led_set(true);
+	k_sleep(K_MSEC(50));
+	board_led_set(false);
 
 	BT_MESH_MODEL_BUF_DEFINE(buf, BT_MESH_MODEL_OP_SENSOR_GET, 3 + 3 + 4 + 1);
 	bt_mesh_model_msg_init(&buf, BT_MESH_MODEL_OP_SENSOR_GET);
