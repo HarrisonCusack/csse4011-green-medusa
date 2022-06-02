@@ -53,6 +53,7 @@
 #define PM4_0 0x08
 #define PM10_0 0x09
 #define NOX 0x0a
+#define BATTERY 0x0b
 #define RANDOM_8 (k_uptime_get_32() & 0xFF)
 
 #define NODE_ADDR 0x0002
@@ -132,6 +133,7 @@ static int cmd_eco2(const struct shell *, size_t, char **);
 static int cmd_pm(const struct shell *, size_t, char **);
 static int cmd_nox(const struct shell *, size_t, char **);
 static int cmd_sync(const struct shell *, size_t, char **);
+static int cmd_battery(const struct shell *, size_t, char **);
 
 
 
@@ -144,6 +146,8 @@ SHELL_CMD_REGISTER(eco2, NULL, "read eco2", cmd_eco2);
 SHELL_CMD_REGISTER(nox, NULL, "read nox", cmd_nox);
 SHELL_CMD_REGISTER(pm, NULL, "read pm", cmd_pm);
 SHELL_CMD_REGISTER(sync, NULL, "sync times", cmd_sync);
+SHELL_CMD_REGISTER(battery, NULL, "show battery life", cmd_battery);
+
 
 
 static const uint8_t net_key[16] = {
@@ -528,6 +532,13 @@ static int cmd_sync(const struct shell *shell, size_t argc, char **argv) {
 	board_led_set(false);
 
 	currentTime = 0;
+	return 0;
+}
+
+static int cmd_battery(const struct shell *shell, size_t argc, char **argv) {
+
+	gen_onoff_send(BATTERY);
+
 	return 0;
 }
 
