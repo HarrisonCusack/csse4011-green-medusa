@@ -809,18 +809,18 @@ zephyr_udc0: &usbd {
  status = "okay";
 };
 # 1 "<command-line>" 2
-# 1 "/home/harrison/project/csse4011-green-medusa/code/meshdongle/app.overlay" 1
+# 1 "./dtc_shell.overlay" 1
 / {
-        chosen {
-                zephyr,console = &cdc_acm_uart0;
-        };
+ chosen {
+  zephyr,shell-uart = &cdc_acm_uart0;
+ };
 };
 
 &zephyr_udc0 {
-        cdc_acm_uart0: cdc_acm_uart0 {
-                compatible = "zephyr,cdc-acm-uart";
-                label = "CDC_ACM_0";
-        };
+ cdc_acm_uart0: cdc_acm_uart0 {
+  compatible = "zephyr,cdc-acm-uart";
+  label = "CDC_ACM_0";
+ };
 };
 # 1 "<command-line>" 2
 # 1 "/home/harrison/csse4011/zephyrproject/zephyr/misc/empty_file.c"

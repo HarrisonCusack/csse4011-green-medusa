@@ -11,7 +11,7 @@ import numpy as np
 CLEAR_CHAR = chr(0x1b) + "[J"
 ESCAPE_CHAR = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
-serialPort = serial.Serial("/dev/serial/by-id/usb-ZEPHYR_USB_Console_Tute_EC10EDEC405209D1-if00", 115200)
+serialPort = serial.Serial("/dev/serial/by-id/usb-Wilfred_MK_USB_Console_Tute_EC10EDEC405209D1-if00", 115200)
 
 class Kalman:
     def __init__(self, x_init, cov_init, meas_err, proc_err):

@@ -23,6 +23,23 @@
 #include <usb/usb_device.h>
 #include <drivers/uart.h>       //Include these libraries
 
+#include <zephyr/types.h>
+#include <stddef.h>
+#include <string.h>
+#include <errno.h>
+#include <zephyr.h>
+#include <shell/shell.h>
+#include <time.h>
+#include <logging/log.h>
+
+#include <bluetooth/hci.h>
+#include <bluetooth/conn.h>
+#include <bluetooth/uuid.h>
+#include <bluetooth/gatt.h>
+
+#include <sys/util.h>
+#include <inttypes.h>
+
 #define PREAMBLE 0xAF
 #define REQUEST 0xFF
 #define PRESSURE 0x01
@@ -51,6 +68,31 @@
 #define BT_MESH_MODEL_OP_SENSOR_COLUMN_STATUS BT_MESH_MODEL_OP_2(0x00, 0x53)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_GET BT_MESH_MODEL_OP_2(0x82, 0x33)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_STATUS BT_MESH_MODEL_OP_2(0x00, 0x54)
+
+float pressure; // default value for testing
+float humidity;
+float temperature;
+float voc;
+float dust;
+
+void thread_cli(void);
+
+K_THREAD_DEFINE(cli, 1024, thread_cli, NULL, NULL, NULL, 10, 0, 0);
+
+LOG_MODULE_REGISTER(weather_station, LOG_LEVEL_DBG);
+
+static int cmd_pressure(const struct shell *, size_t, char **);
+static int cmd_humidity(const struct shell *, size_t, char **);
+static int cmd_temperature(const struct shell *, size_t, char **);
+static int cmd_voc(const struct shell *, size_t, char **);
+static int cmd_dust(const struct shell *, size_t, char **);
+
+SHELL_CMD_REGISTER(pressure, NULL, "read pressure", cmd_pressure);
+SHELL_CMD_REGISTER(humidity, NULL, "read humidity", cmd_humidity);
+SHELL_CMD_REGISTER(temperature, NULL, "read temperature", cmd_temperature);
+SHELL_CMD_REGISTER(voc, NULL, "read voc", cmd_voc);
+SHELL_CMD_REGISTER(dust, NULL, "read dust", cmd_dust);
+
 
 static const uint8_t net_key[16] = {
 	0xb2, 0xf1, 0xc5, 0x33, 0xeb, 0x04, 0x82, 0x35,
@@ -279,6 +321,42 @@ static const struct bt_mesh_model_op gen_onoff_srv_op[] = {
 
 /* Generic OnOff Client */
 
+static int cmd_pressure(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	LOG_INF("Pressure is %f", pressure);
+
+	return 0;
+}
+
+static int cmd_humidity(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	LOG_INF("Humidity is %f", humidity);
+	return 0;
+}
+
+static int cmd_temperature(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	LOG_INF("Temperature is %f", temperature);
+	return 0;
+}
+
+static int cmd_voc(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	LOG_INF("VOC is %f", voc);
+	return 0;
+}
+
+static int cmd_dust(const struct shell *shell, size_t argc, char **argv) {
+	ARG_UNUSED(argc);
+
+	LOG_INF("Dust is %f", dust);
+	return 0;
+}
+
 static int gen_onoff_status(struct bt_mesh_model *model,
 			    struct bt_mesh_msg_ctx *ctx,
 			    struct net_buf_simple *buf)
@@ -301,6 +379,20 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 	uint32_t data = net_buf_simple_pull_le32(buf);
 	printk("%d %d %d %f\n", address, time, type, *((float *)(&data)));
 	//printk("Node: %d\tTime: %d\t Sensor: %d\tData: %f\n", address, time, type, *((float *)(&data))); HARRISON COMMENTED
+
+	float thisData = *((float *)(&data));
+
+	if (type == 1) {
+		pressure = thisData;
+	} else if (type == 2) {
+		humidity = thisData;
+	} else if (type == 3) {
+		temperature = thisData;
+	} else if (type == 4) {
+		voc = thisData;
+	} else if (type == 5) {
+		dust = thisData;
+	}
 
 	//printk("%02x %02x %02x %02x %02x %08x\n", tid, address, preamble, type, length, data);
 	if (tid == onoff.tid && address != ctx->addr) {
@@ -534,12 +626,29 @@ static void bt_ready(int err)
 	//printk("Mesh initialized\n"); HARRISON COMMENTED
 }
 
+void thread_cli(void) {
+	/* Setup DTR */
+	const struct device *shell_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_shell_uart));
+	uint32_t dtr = 0;
+	
+	while (!dtr) {
+		uart_line_ctrl_get(shell_dev, UART_LINE_CTRL_DTR, &dtr);
+		k_sleep(K_MSEC(100));
+	} 
+}
+
 void main(void)
 {
 	/* Enable the USB Driver */
     if (usb_enable(NULL)){
         return;
 	}
+
+	pressure = 42.137;
+	humidity = 42.137;
+	temperature = 42.137;
+	voc = 42.137;
+	dust = 42.137;
 
 	static struct k_work button_work;
 	int err = -1;

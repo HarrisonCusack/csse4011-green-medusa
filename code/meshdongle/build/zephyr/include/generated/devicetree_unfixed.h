@@ -8201,9 +8201,9 @@
 #define DT_CHOSEN_zephyr_entropy_EXISTS          1
 #define DT_CHOSEN_zephyr_flash_controller        DT_N_S_soc_S_flash_controller_4001e000
 #define DT_CHOSEN_zephyr_flash_controller_EXISTS 1
-#define DT_CHOSEN_zephyr_console                 DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0
+#define DT_CHOSEN_zephyr_console                 DT_N_S_soc_S_uart_40002000
 #define DT_CHOSEN_zephyr_console_EXISTS          1
-#define DT_CHOSEN_zephyr_shell_uart              DT_N_S_soc_S_uart_40002000
+#define DT_CHOSEN_zephyr_shell_uart              DT_N_S_soc_S_usbd_40027000_S_cdc_acm_uart0
 #define DT_CHOSEN_zephyr_shell_uart_EXISTS       1
 #define DT_CHOSEN_zephyr_uart_mcumgr             DT_N_S_soc_S_uart_40002000
 #define DT_CHOSEN_zephyr_uart_mcumgr_EXISTS      1

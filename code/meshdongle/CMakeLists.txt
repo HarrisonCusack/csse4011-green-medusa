@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
+set(DTC_OVERLAY_FILE dtc_shell.overlay)
+
 cmake_minimum_required(VERSION 3.20.0)
 set(QEMU_EXTRA_FLAGS -s)
 
