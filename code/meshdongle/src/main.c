@@ -134,7 +134,7 @@ static int cmd_pm(const struct shell *, size_t, char **);
 static int cmd_nox(const struct shell *, size_t, char **);
 static int cmd_sync(const struct shell *, size_t, char **);
 static int cmd_battery(const struct shell *, size_t, char **);
-
+static int cmd_stop(const struct shell *, size_t, char **);
 
 
 SHELL_CMD_REGISTER(reset, NULL, "reset devices", cmd_reset);
@@ -147,6 +147,7 @@ SHELL_CMD_REGISTER(nox, NULL, "read nox", cmd_nox);
 SHELL_CMD_REGISTER(pm, NULL, "read pm", cmd_pm);
 SHELL_CMD_REGISTER(sync, NULL, "sync times", cmd_sync);
 SHELL_CMD_REGISTER(battery, NULL, "show battery life", cmd_battery);
+SHELL_CMD_REGISTER(stop, NULL, "stop constant sending", cmd_stop);
 
 
 
@@ -532,6 +533,13 @@ static int cmd_sync(const struct shell *shell, size_t argc, char **argv) {
 	board_led_set(false);
 
 	currentTime = 0;
+	return 0;
+}
+
+static int cmd_stop(const struct shell *shell, size_t argc, char **argv) {
+
+	running = 0;
+	
 	return 0;
 }
 
