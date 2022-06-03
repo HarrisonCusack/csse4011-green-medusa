@@ -115,6 +115,8 @@ def begin():
                 unit = "ug/m^3"
             elif (processedInput[2] == '10'):
                 unit = "index"
+            elif (processedInput[2] == '11'):
+                unit = "mV"
 
             data = []
             data.append(
