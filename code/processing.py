@@ -71,71 +71,107 @@ def begin():
         processingInput = ESCAPE_CHAR.sub('', rawInput.split(CLEAR_CHAR)[-1])
         processedInput = processingInput.split(" ")
 
-        if (len(processedInput) == 4):
-            if(processedInput[2] != previous_sensor):
-                filter = {'qty':50000}
-                result = my_device.remove(filter)
-            previous_sensor = processedInput[2]
-            if (processedInput[0] == '3'):
+        try:
+
+            if (len(processedInput) == 4):
+                if(processedInput[2] != previous_sensor):
+                    filter = {'qty':50000}
+                    result = my_device.remove(filter)
+                previous_sensor = processedInput[2]
+
+                unit = ""
                 if (processedInput[2] == '1'):
-                    k_pressure.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_pressure.x_hat[0])
+                    unit = "kPa"
+                elif (processedInput[2] == '2'):
+                    unit = "index"
                 elif (processedInput[2] == '3'):
-                    k_temperature.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_temperature.x_hat[0])
+                    unit = "C"
                 elif (processedInput[2] == '4'):
-                    k_humidity.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_humidity.x_hat[0])
+                    unit = "RH%"
                 elif (processedInput[2] == '5'):
-                    k_voc.update(np.array([float(processedInput[3])]))
-                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", k_voc.x_hat[0])
+                    unit = "index"
+                elif (processedInput[2] == '6'):
+                    unit = "ug/m^3"
+                elif (processedInput[2] == '7'):
+                    unit = "ug/m^3"
+                elif (processedInput[2] == '8'):
+                    unit = "ug/m^3"
+                elif (processedInput[2] == '9'):
+                    unit = "ug/m^3"
+                elif (processedInput[2] == '10'):
+                    unit = "index"
+                elif (processedInput[2] == '11'):
+                    unit = "mV"
+
+                if (processedInput[0] == '3'):
+                    if (processedInput[2] == '1'):
+                        k_pressure.update(np.array([float(processedInput[3])]))
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Pressure, Data:", k_pressure.x_hat[0], unit)
+                    elif (processedInput[2] == '3'):
+                        k_temperature.update(np.array([float(processedInput[3])]))
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Temperature, Data:", k_temperature.x_hat[0], unit)
+                    elif (processedInput[2] == '4'):
+                        k_humidity.update(np.array([float(processedInput[3])]))
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Humidity, Data:", k_humidity.x_hat[0], unit)
+                    elif (processedInput[2] == '5'):
+                        k_voc.update(np.array([float(processedInput[3])]))
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: VOC, Data:", k_voc.x_hat[0], unit)
+                    elif (processedInput[2] == '2'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: eCO2, Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '6'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (1u), Data:", processedInput[3], unit)        
+                    elif (processedInput[2] == '7'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (2.5u), Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '8'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (4u), Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '9'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (10u), Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '10'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: NOx, Data:", processedInput[3], unit)
                 else:
-                    print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])    
-            else:
-                print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Sensor:", processedInput[2], ", Data:", processedInput[3])
+                    if (processedInput[2] == '1'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Pressure, Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '2'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: eCO2, Data:", processedInput[3], unit)        
+                    elif (processedInput[2] == '3'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Temperature, Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '4'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Humidity, Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '5'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: VOC, Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '6'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (1u), Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '7'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (2.5u), Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '8'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (4u), Data:", processedInput[3], unit)        
+                    elif (processedInput[2] == '9'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (10u), Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '10'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: NOx, Data:", processedInput[3], unit)
+                    
+                
+                
+
+                data = []
+                data.append(
+                    {
+                    'variable': 'node' + processedInput[0],
+                    'value': processedInput[3],
+                    'time' : time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)),
+                    'unit': unit
+                    }
+                )
+
+                result = my_device.insert(data)
+
+                
             
-            unit = ""
-            if (processedInput[2] == '1'):
-                unit = "kPa"
-            elif (processedInput[2] == '2'):
-                unit = "index"
-            elif (processedInput[2] == '3'):
-                unit = "C"
-            elif (processedInput[2] == '4'):
-                unit = "RH%"
-            elif (processedInput[2] == '5'):
-                unit = "index"
-            elif (processedInput[2] == '6'):
-                unit = "ug/m^3"
-            elif (processedInput[2] == '7'):
-                unit = "ug/m^3"
-            elif (processedInput[2] == '8'):
-                unit = "ug/m^3"
-            elif (processedInput[2] == '9'):
-                unit = "ug/m^3"
-            elif (processedInput[2] == '10'):
-                unit = "index"
-            elif (processedInput[2] == '11'):
-                unit = "mV"
-
-            data = []
-            data.append(
-                {
-                'variable': 'node' + processedInput[0],
-                'value': processedInput[3],
-                'time' : time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)),
-                'unit': unit
-                }
-            )
-
-            result = my_device.insert(data)
-
-            
-        
-        elif (len(processedInput) == 1 and len(processedInput[0]) > 1):
-            if (processedInput[0][-2] == "n"):
-                currentTime = time.time()
-        
+            elif (len(processedInput) == 1 and len(processedInput[0]) > 1):
+                if (processedInput[0][-2] == "n"):
+                    currentTime = time.time()
+        except:
+            pass
 
         # try:
         #     newValues = [float(i) for i in newValues2]
