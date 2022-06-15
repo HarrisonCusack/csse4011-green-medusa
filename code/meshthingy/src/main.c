@@ -25,12 +25,13 @@
 #include "battery.h"
 #include "board.h"
 #include "scu_sensors.h"
+#include <math.h>
 
 #define MY_STACK_SIZE 1024
 #define MY_PRIORITY 5
 
 // Time for sleep mode
-uint32_t time = 0;
+uint32_t timer = 0;
 
 /**
  * @brief timer that increase every second
@@ -42,7 +43,7 @@ void timer_func(void* argv)
     // Increase time by 1 second
     while(1) {
         k_msleep(1);
-        time++;
+        timer++;
     }
 }
 
@@ -99,7 +100,7 @@ static const struct battery_level_point levels[] = {
 #define BATTERY 0x0b
 #define RANDOM_8 (k_uptime_get_32() & 0xFF)
 
-#define NODE_ADDR 0x0005
+#define NODE_ADDR 0x0003
 
 #define OP_ONOFF_GET       BT_MESH_MODEL_OP_2(0x82, 0x01)
 #define OP_ONOFF_SET       BT_MESH_MODEL_OP_2(0x82, 0x02)
@@ -113,6 +114,10 @@ static const struct battery_level_point levels[] = {
 #define BT_MESH_MODEL_OP_SENSOR_COLUMN_STATUS BT_MESH_MODEL_OP_2(0x00, 0x53)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_GET BT_MESH_MODEL_OP_2(0x82, 0x33)
 #define BT_MESH_MODEL_OP_SENSOR_SERIES_STATUS BT_MESH_MODEL_OP_2(0x00, 0x54)
+
+#ifndef CONFIG_BT_SETTINGSn
+#define CONFIG_BT_MESH_SEQ_STORE_RATE 0
+#endif
 
 static const uint8_t net_key[16] = {
 	0xb2, 0xf1, 0xc5, 0x33, 0xeb, 0x04, 0x82, 0x35,
@@ -129,7 +134,7 @@ static const uint8_t app_key[16] = {
 
 static const uint16_t net_idx;
 static const uint16_t app_idx;
-static const uint32_t iv_index;
+static uint32_t iv_index;
 static uint8_t flags;
 static uint16_t addr = NODE_ADDR;
 
@@ -177,7 +182,7 @@ void sensor_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct
 	uint8_t preamble = net_buf_simple_pull_u8(buf);
 	uint8_t type = net_buf_simple_pull_u8(buf);
 	uint8_t length = net_buf_simple_pull_u8(buf);
-	time = net_buf_simple_pull_le32(buf);
+	timer = net_buf_simple_pull_le32(buf);
 	uint8_t device = net_buf_simple_pull_u8(buf);
 	printk("%02x %02x\n", onoff.src, ctx->addr);
 	if (tid == onoff.tid && onoff.src == ctx->addr) {
@@ -217,8 +222,8 @@ void sensor_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct
 					break;
 				}
 
-				unsigned int batt_pptt = battery_level_pptt(batt_mV, levels);
-
+				send_sensor_data(model, ctx, device, (float) batt_mV);
+				
 				if (batt_mV < 3600) {
 					gpio_pin_set_dt(&red_led, 0);	
 					gpio_pin_set_dt(&green_led, 1);	
@@ -232,7 +237,7 @@ void sensor_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct
 					gpio_pin_set_dt(&green_led, 0);	
 					gpio_pin_set_dt(&blue_led, 1);
 				}
-				send_sensor_data(model, ctx, device, (float) batt_mV);
+				
 				k_msleep(5000);
 				gpio_pin_set_dt(&red_led, 1);	
 				gpio_pin_set_dt(&green_led, 1);	
@@ -367,7 +372,7 @@ static int send_sensor_data(struct bt_mesh_model *model, struct bt_mesh_msg_ctx 
 		net_buf_simple_add_u8(&buf, PREAMBLE);
 		net_buf_simple_add_u8(&buf, device);
 		net_buf_simple_add_u8(&buf, 4);
-		net_buf_simple_add_le32(&buf, time);
+		net_buf_simple_add_le32(&buf, timer);
 		net_buf_simple_add_le32(&buf, *((uint32_t*)(&data)));
 
 		printk("Sending ");
@@ -399,7 +404,7 @@ static void bt_ready(int err)
 		return;
 	}
 
-	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+	if (IS_ENABLED(CONFIG_SETTINGS)) {
 		printk("Loading stored settings\n");
 		settings_load();
 	}
@@ -408,6 +413,7 @@ static void bt_ready(int err)
 				dev_key);
 	if (err == -EALREADY) {
 		printk("Using stored settings\n");
+		configure();
 	} else if (err) {
 		printk("Provisioning failed (err %d)\n", err);
 		return;
@@ -435,6 +441,12 @@ void main(void)
 	int err = -1;
 
 	printk("Initializing...\n");
+
+	/*
+	srand(time(NULL));
+	int r = rand();
+	iv_index = r;
+	*/
 
 	sensors_init();
 

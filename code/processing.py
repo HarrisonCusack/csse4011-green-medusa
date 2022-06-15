@@ -16,7 +16,7 @@ device_information = my_device.info()
 CLEAR_CHAR = chr(0x1b) + "[J"
 ESCAPE_CHAR = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
-serialPort = serial.Serial("/dev/serial/by-id/usb-Wilfred_MK_USB_Console_Tute_EC10EDEC405209D1-if00", 115200)
+serialPort = serial.Serial("/dev/serial/by-id/usb-Wilfred_MK_USB_Console_Tute_98E95B2AEE89E1ED-if00", 115200)
 
 def send_serial():
     while True:
@@ -128,6 +128,8 @@ def begin():
                         print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (10u), Data:", processedInput[3], unit)
                     elif (processedInput[2] == '10'):
                         print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: NOx, Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '11'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Battery, Data:", processedInput[3], unit)
                 else:
                     if (processedInput[2] == '1'):
                         print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Pressure, Data:", processedInput[3], unit)
@@ -149,6 +151,8 @@ def begin():
                         print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Particle Matter (10u), Data:", processedInput[3], unit)
                     elif (processedInput[2] == '10'):
                         print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: NOx, Data:", processedInput[3], unit)
+                    elif (processedInput[2] == '11'):
+                        print("Node:", processedInput[0], ", Time:", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(processedInput[1]) / 1000.0 + currentTime)), ", Type: Battery, Data:", processedInput[3], unit)
                     
                 
                 

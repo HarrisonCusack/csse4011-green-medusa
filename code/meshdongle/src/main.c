@@ -579,6 +579,10 @@ static int gen_onoff_status(struct bt_mesh_model *model,
 		return 0;
 	}
 
+	board_led_set(true);
+	k_sleep(K_MSEC(50));
+	board_led_set(false);
+
 	onoff.tid = tid;
 	onoff.src = ctx->addr;
 
@@ -832,6 +836,7 @@ static void bt_ready(int err)
 				dev_key);
 	if (err == -EALREADY) {
 		printk("Using stored settings\n");
+		configure();
 	} else if (err) {
 		printk("Provisioning failed (err %d)\n", err);
 		return;
