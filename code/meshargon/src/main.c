@@ -417,6 +417,7 @@ static void bt_ready(int err)
 				dev_key);
 	if (err == -EALREADY) {
 		printk("Using stored settings\n");
+		configure();
 	} else if (err) {
 		printk("Provisioning failed (err %d)\n", err);
 		return;

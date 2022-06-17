@@ -225,21 +225,27 @@ void sensor_get(struct bt_mesh_model *model, struct bt_mesh_msg_ctx *ctx, struct
 				send_sensor_data(model, ctx, device, (float) batt_mV);
 				
 				if (batt_mV < 3600) {
-					gpio_pin_set_dt(&red_led, 0);	
+					printk("low batt\n");
+					board_led_set(true);
+					//gpio_pin_set_dt(&red_led, 0);	
 					gpio_pin_set_dt(&green_led, 1);	
 					gpio_pin_set_dt(&blue_led, 1);
 				} else if (batt_mV > 3800) {
-					gpio_pin_set_dt(&red_led, 1);	
+					printk("high batt\n");
+					board_led_set(false);
+					//gpio_pin_set_dt(&red_led, 1);	
 					gpio_pin_set_dt(&green_led, 0);	
 					gpio_pin_set_dt(&blue_led, 1);
 				} else {
-					gpio_pin_set_dt(&red_led, 0);	
+					printk("avg batt\n");
+					board_led_set(true);
+					//gpio_pin_set_dt(&red_led, 0);	
 					gpio_pin_set_dt(&green_led, 0);	
 					gpio_pin_set_dt(&blue_led, 1);
 				}
 				
 				k_msleep(5000);
-				gpio_pin_set_dt(&red_led, 1);	
+				//gpio_pin_set_dt(&red_led, 1);	
 				gpio_pin_set_dt(&green_led, 1);	
 				gpio_pin_set_dt(&blue_led, 1);
 				board_led_set(false);
@@ -380,10 +386,14 @@ static int send_sensor_data(struct bt_mesh_model *model, struct bt_mesh_msg_ctx 
 			printk("%02x ", buf.data[i]);
 		}
 		printk("\n");
-		k_sleep(K_MSEC(100));
-		board_led_set(true);
-		k_sleep(K_MSEC(50));
-		board_led_set(false);
+		if (device != BATTERY) {
+			printk("Device is not battery\n");
+			k_sleep(K_MSEC(100));
+			board_led_set(true);
+			k_sleep(K_MSEC(50));
+			board_led_set(false);
+		}
+		
 
 		return bt_mesh_model_send(model, ctx, &buf, NULL, NULL);
 	}
